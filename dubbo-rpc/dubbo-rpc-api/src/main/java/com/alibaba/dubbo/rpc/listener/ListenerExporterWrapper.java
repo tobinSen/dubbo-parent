@@ -25,7 +25,7 @@ import com.alibaba.dubbo.rpc.Invoker;
 import java.util.List;
 
 /**
- * ListenerExporter
+ * ListenerExporter 服务暴露（装饰者模式）
  */
 public class ListenerExporterWrapper<T> implements Exporter<T> {
 

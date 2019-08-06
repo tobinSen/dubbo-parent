@@ -28,7 +28,7 @@ import com.alibaba.dubbo.rpc.RpcException;
 import java.util.List;
 
 /**
- * ListenerInvoker
+ * ListenerInvoker 服务引用（装饰者模式）
  */
 public class ListenerInvokerWrapper<T> implements Invoker<T> {
 

@@ -56,6 +56,8 @@ import java.util.Set;
 /**
  * RegistryDirectory
  *
+ * 动态服务目录
+ *
  */
 public class RegistryDirectory<T> extends AbstractDirectory<T> implements NotifyListener {
 

@@ -32,10 +32,14 @@ public class AdaptiveExtensionFactory implements ExtensionFactory {
 
     private final List<ExtensionFactory> factories;
 
+    //构造方法，子类初始化之前，会对父类进行初始化
     public AdaptiveExtensionFactory() {
+        //1.加载所有实现类
         ExtensionLoader<ExtensionFactory> loader = ExtensionLoader.getExtensionLoader(ExtensionFactory.class);
         List<ExtensionFactory> list = new ArrayList<ExtensionFactory>();
+        //2.遍历实现类
         for (String name : loader.getSupportedExtensions()) {
+            //3.收集实现类
             list.add(loader.getExtension(name));
         }
         factories = Collections.unmodifiableList(list);

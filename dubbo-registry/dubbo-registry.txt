@@ -1,0 +1,2 @@
+1.dubbo的注册中心实现有Multicast注册中心、Zookeeper注册中心、Redis注册中心、Simple注册中心
+    （具体怎么实现我在后面文章中会介绍），这个模块就是封装了dubbo所支持的注册中心的实现。

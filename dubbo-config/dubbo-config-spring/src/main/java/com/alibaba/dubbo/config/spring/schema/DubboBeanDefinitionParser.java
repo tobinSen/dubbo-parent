@@ -57,6 +57,8 @@ import java.util.regex.Pattern;
 /**
  * AbstractBeanDefinitionParser
  *
+ * dubbo xml文件--->RegistryConfig-->BeanDefinition
+ *
  * @export
  */
 public class DubboBeanDefinitionParser implements BeanDefinitionParser {
@@ -99,6 +101,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
             if (parserContext.getRegistry().containsBeanDefinition(id)) {
                 throw new IllegalStateException("Duplicate spring bean id " + id);
             }
+            //这里就是在动态注册bean了，xml->serviceConfig-->beanDefinition-->register
             parserContext.getRegistry().registerBeanDefinition(id, beanDefinition);
             beanDefinition.getPropertyValues().addPropertyValue("id", id);
         }
@@ -412,6 +415,7 @@ public class DubboBeanDefinitionParser implements BeanDefinitionParser {
         }
     }
 
+    //todo 核心去解析dubbo的标签
     @Override
     public BeanDefinition parse(Element element, ParserContext parserContext) {
         return parse(element, parserContext, beanClass, required);

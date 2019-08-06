@@ -40,9 +40,9 @@ public interface Router extends Comparable<Router> {
      */
     URL getUrl();
 
-    /**
+    /** 先router 在负载均衡
      * route.
-     *
+     *筛选出跟规则匹配的Invoker集合
      * @param invokers
      * @param url        refer url
      * @param invocation

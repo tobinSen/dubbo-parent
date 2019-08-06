@@ -23,10 +23,10 @@ package com.alibaba.dubbo.rpc;
  * @see com.alibaba.dubbo.rpc.ExporterListener
  * @see com.alibaba.dubbo.rpc.protocol.AbstractExporter
  */
-public interface Exporter<T> {
+public interface Exporter<T> { //获取Invoker
 
     /**
-     * get invoker.
+     * get invoker. 获得对应的实体域invoker
      *
      * @return invoker
      */

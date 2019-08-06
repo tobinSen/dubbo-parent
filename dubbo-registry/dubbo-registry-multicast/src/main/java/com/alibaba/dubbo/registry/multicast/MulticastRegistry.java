@@ -66,13 +66,16 @@ public class MulticastRegistry extends FailbackRegistry {
 
     private final ConcurrentMap<URL, Set<URL>> received = new ConcurrentHashMap<URL, Set<URL>>();
 
+    //任务调度器
     private final ScheduledExecutorService cleanExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("DubboMulticastRegistryCleanTimer", true));
 
+    // 定时清理执行器，一定时间清理过期的url
     private final ScheduledFuture<?> cleanFuture;
 
     private final int cleanPeriod;
 
     private volatile boolean admin = false;
+
 
     public MulticastRegistry(URL url) {
         super(url);
@@ -86,21 +89,26 @@ public class MulticastRegistry extends FailbackRegistry {
             mutilcastAddress = InetAddress.getByName(url.getHost());
             mutilcastPort = url.getPort() <= 0 ? DEFAULT_MULTICAST_PORT : url.getPort();
             mutilcastSocket = new MulticastSocket(mutilcastPort);
+            //禁用多播数据报的本地环回
             mutilcastSocket.setLoopbackMode(false);
+            // 加入同一组广播
             mutilcastSocket.joinGroup(mutilcastAddress);
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     byte[] buf = new byte[2048];
+                    //UDP模式
                     DatagramPacket recv = new DatagramPacket(buf, buf.length);
                     while (!mutilcastSocket.isClosed()) {
                         try {
+                            //接收数据(provider consumer)一直接收消息
                             mutilcastSocket.receive(recv);
                             String msg = new String(recv.getData()).trim();
                             int i = msg.indexOf('\n');
                             if (i > 0) {
                                 msg = msg.substring(0, i).trim();
                             }
+                            //类名.this就是调用本类自己的构造方法无参。
                             MulticastRegistry.this.receive(msg, (InetSocketAddress) recv.getSocketAddress());
                             Arrays.fill(buf, (byte) 0);
                         } catch (Throwable e) {
@@ -118,10 +126,12 @@ public class MulticastRegistry extends FailbackRegistry {
         }
         this.cleanPeriod = url.getParameter(Constants.SESSION_TIMEOUT_KEY, Constants.DEFAULT_SESSION_TIMEOUT);
         if (url.getParameter("clean", true)) {
+            //清理
             this.cleanFuture = cleanExecutor.scheduleWithFixedDelay(new Runnable() {
                 @Override
                 public void run() {
                     try {
+                        //url
                         clean(); // Remove the expired
                     } catch (Throwable t) { // Defensive fault tolerance
                         logger.error("Unexpected exception occur at clean expired provider, cause: " + t.getMessage(), t);
@@ -133,6 +143,7 @@ public class MulticastRegistry extends FailbackRegistry {
         }
     }
 
+    //是否是广播地址
     private static boolean isMulticastAddress(String ip) {
         int i = ip.indexOf('.');
         if (i > 0) {
@@ -145,6 +156,7 @@ public class MulticastRegistry extends FailbackRegistry {
         return false;
     }
 
+    //清理过期的url
     private void clean() {
         if (admin) {
             for (Set<URL> providers : new HashSet<Set<URL>>(received.values())) {
@@ -160,6 +172,7 @@ public class MulticastRegistry extends FailbackRegistry {
         }
     }
 
+    //两次连接socket判断url是否过期
     private boolean isExpired(URL url) {
         if (!url.getParameter(Constants.DYNAMIC_KEY, true)
                 || url.getPort() <= 0
@@ -200,6 +213,7 @@ public class MulticastRegistry extends FailbackRegistry {
         return false;
     }
 
+    //接收消息
     private void receive(String msg, InetSocketAddress remoteAddress) {
         if (logger.isInfoEnabled()) {
             logger.info("Receive multicast message: " + msg + " from " + remoteAddress);
@@ -231,6 +245,7 @@ public class MulticastRegistry extends FailbackRegistry {
         }*/
     }
 
+    //广播发送
     private void broadcast(String msg) {
         if (logger.isInfoEnabled()) {
             logger.info("Send broadcast message: " + msg + " to " + mutilcastAddress + ":" + mutilcastPort);
@@ -244,6 +259,7 @@ public class MulticastRegistry extends FailbackRegistry {
         }
     }
 
+    //单播发送
     private void unicast(String msg, String host) {
         if (logger.isInfoEnabled()) {
             logger.info("Send unicast message: " + msg + " to " + host + ":" + mutilcastPort);
@@ -275,6 +291,7 @@ public class MulticastRegistry extends FailbackRegistry {
         broadcast(Constants.SUBSCRIBE + " " + url.toFullString());
         synchronized (listener) {
             try {
+                //当前线程等待
                 listener.wait(url.getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT));
             } catch (InterruptedException e) {
             }
@@ -332,7 +349,7 @@ public class MulticastRegistry extends FailbackRegistry {
                 for (NotifyListener listener : entry.getValue()) {
                     notify(key, listener, list);
                     synchronized (listener) {
-                        listener.notify();
+                        listener.notify();//激活
                     }
                 }
             }
@@ -347,8 +364,8 @@ public class MulticastRegistry extends FailbackRegistry {
                 if (urls != null) {
                     urls.remove(url);
                 }
-                if (urls == null || urls.isEmpty()){
-                    if (urls == null){
+                if (urls == null || urls.isEmpty()) {
+                    if (urls == null) {
                         urls = new ConcurrentHashSet<URL>();
                     }
                     URL empty = url.setProtocol(Constants.EMPTY_PROTOCOL);

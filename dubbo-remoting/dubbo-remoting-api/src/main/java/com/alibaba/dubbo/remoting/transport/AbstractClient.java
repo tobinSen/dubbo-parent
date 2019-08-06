@@ -364,7 +364,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
 
     /**
      * Open client.
-     *
+     * //todo 客户端的扩展
      * @throws Throwable
      */
     protected abstract void doOpen() throws Throwable;

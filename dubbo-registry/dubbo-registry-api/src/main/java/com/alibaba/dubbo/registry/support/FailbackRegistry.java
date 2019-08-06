@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * FailbackRegistry. (SPI, Prototype, ThreadSafe)
- *
  */
 public abstract class FailbackRegistry extends AbstractRegistry {
 
@@ -66,11 +65,13 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     public FailbackRegistry(URL url) {
         super(url);
         this.retryPeriod = url.getParameter(Constants.REGISTRY_RETRY_PERIOD_KEY, Constants.DEFAULT_REGISTRY_RETRY_PERIOD);
+        //新增一个定时器，（注册失败后的策略是：重试注册， 默认5秒）
         this.retryFuture = retryExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 // Check and connect to the registry
                 try {
+                    //这里的重试针对的是扩展的，内存默认是能够注册成功了
                     retry();
                 } catch (Throwable t) { // Defensive fault tolerance
                     logger.error("Unexpected error occur at failed retry, cause: " + t.getMessage(), t);
@@ -106,6 +107,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     private void addFailedSubscribed(URL url, NotifyListener listener) {
         Set<NotifyListener> listeners = failedSubscribed.get(url);
         if (listeners == null) {
+            //这也是一种写法
             failedSubscribed.putIfAbsent(url, new ConcurrentHashSet<NotifyListener>());
             listeners = failedSubscribed.get(url);
         }
@@ -127,9 +129,16 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         }
     }
 
+    /**
+     * 重新注册：
+     *  主动：super.register
+     *       doRegister(url):实现类进行扩展
+     *  定时：定时重试扩展实现类的持久化
+     *       doRegister(url):实现类进行扩展
+     */
     @Override
     public void register(URL url) {
-        super.register(url);
+        super.register(url); //这里只是注册到内存中
         failedRegistered.remove(url);
         failedUnregistered.remove(url);
         try {
@@ -280,6 +289,10 @@ public abstract class FailbackRegistry extends AbstractRegistry {
         super.notify(url, listener, urls);
     }
 
+    //子类继承：failedRegistered注册失败的URL，这里取的是所有的URL全部重新注册一遍
+    //为什么取所有的URL进行重新注册？
+    //因为：registryUrl的地址改变了，需要从新注册
+    //todo step 1
     @Override
     protected void recover() throws Exception {
         // register
@@ -288,6 +301,8 @@ public abstract class FailbackRegistry extends AbstractRegistry {
             if (logger.isInfoEnabled()) {
                 logger.info("Recover register url " + recoverRegistered);
             }
+            //dubbo允许多个注册中心
+            //recover：本质是将所有的URL，添加到failRegistered中
             for (URL url : recoverRegistered) {
                 failedRegistered.add(url);
             }
@@ -308,8 +323,14 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     }
 
     // Retry the failed actions
+    //todo step 2
     protected void retry() {
         if (!failedRegistered.isEmpty()) {
+            //集合传递
+            /** 当s2是成员变量的时候需要考虑
+             * Set s1 = s2; s2变，s1也变
+             * Set s1 = new Hash<>(s2);s1是一个全新的
+             */
             Set<URL> failed = new HashSet<URL>(failedRegistered);
             if (failed.size() > 0) {
                 if (logger.isInfoEnabled()) {
@@ -442,6 +463,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
     public void destroy() {
         super.destroy();
         try {
+            //取消定时重试注册
             retryFuture.cancel(true);
         } catch (Throwable t) {
             logger.warn(t.getMessage(), t);
@@ -451,6 +473,7 @@ public abstract class FailbackRegistry extends AbstractRegistry {
 
     // ==== Template method ====
 
+    //todo 这里就是扩展
     protected abstract void doRegister(URL url);
 
     protected abstract void doUnregister(URL url);

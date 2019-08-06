@@ -21,7 +21,7 @@ import com.alibaba.dubbo.rpc.cluster.configurator.AbstractConfigurator;
 
 /**
  * AbsentConfigurator
- *
+ *  覆盖配置
  */
 public class OverrideConfigurator extends AbstractConfigurator {
 

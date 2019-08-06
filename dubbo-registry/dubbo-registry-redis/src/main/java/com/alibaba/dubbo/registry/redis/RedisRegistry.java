@@ -53,24 +53,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * RedisRegistry
- *
  */
 public class RedisRegistry extends FailbackRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(RedisRegistry.class);
 
     private static final int DEFAULT_REDIS_PORT = 6379;
-
+    //默认 Redis 根节点，涉及到的是dubbo的分组配置
     private final static String DEFAULT_ROOT = "dubbo";
 
     private final ScheduledExecutorService expireExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("DubboRegistryExpireTimer", true));
-
+    //默认 Redis 根节点，涉及到的是dubbo的分组配置
     private final ScheduledFuture<?> expireFuture;
 
+    // Redis 根节点
     private final String root;
 
+    // JedisPool集合，map 的key为 "ip:port"的形式
     private final Map<String, JedisPool> jedisPools = new ConcurrentHashMap<String, JedisPool>();
 
+    // 通知器集合，key为 Root + Service的形式
+    // 例如 /dubbo/com.alibaba.dubbo.demo.DemoService
     private final ConcurrentMap<String, Notifier> notifiers = new ConcurrentHashMap<String, Notifier>();
 
     private final int reconnectPeriod;
@@ -86,6 +89,7 @@ public class RedisRegistry extends FailbackRegistry {
         if (url.isAnyHost()) {
             throw new IllegalStateException("registry address == null");
         }
+        //通用的对象池配置（URL中获取参数值）
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
         config.setTestOnBorrow(url.getParameter("test.on.borrow", true));
         config.setTestOnReturn(url.getParameter("test.on.return", false));
@@ -107,7 +111,7 @@ public class RedisRegistry extends FailbackRegistry {
         if (url.getParameter("min.evictable.idle.time.millis", 0) > 0)
             config.setMinEvictableIdleTimeMillis(url.getParameter("min.evictable.idle.time.millis", 0));
 
-        String cluster = url.getParameter("cluster", "failover");
+        String cluster = url.getParameter("cluster", "failover");//默认集群模式是失败转移，单点故障
         if (!"failover".equals(cluster) && !"replicate".equals(cluster)) {
             throw new IllegalArgumentException("Unsupported redis cluster: " + cluster + ". The redis cluster only supported failover or replicate.");
         }
@@ -115,6 +119,7 @@ public class RedisRegistry extends FailbackRegistry {
 
         List<String> addresses = new ArrayList<String>();
         addresses.add(url.getAddress());
+        //redis集群名称
         String[] backups = url.getParameter(Constants.BACKUP_KEY, new String[0]);
         if (backups != null && backups.length > 0) {
             addresses.addAll(Arrays.asList(backups));
@@ -131,6 +136,7 @@ public class RedisRegistry extends FailbackRegistry {
                 host = address;
                 port = DEFAULT_REDIS_PORT;
             }
+            //一个redis-->redisPool
             this.jedisPools.put(address, new JedisPool(config, host, port,
                     url.getParameter(Constants.TIMEOUT_KEY, Constants.DEFAULT_TIMEOUT), StringUtils.isEmpty(url.getPassword()) ? null : url.getPassword(),
                     url.getParameter("db.index", 0)));
@@ -147,10 +153,12 @@ public class RedisRegistry extends FailbackRegistry {
         this.root = group;
 
         this.expirePeriod = url.getParameter(Constants.SESSION_TIMEOUT_KEY, Constants.DEFAULT_SESSION_TIMEOUT);
+        //定时
         this.expireFuture = expireExecutor.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 try {
+                    // 延长到期时间
                     deferExpired(); // Extend the expiration time
                 } catch (Throwable t) { // Defensive fault tolerance
                     logger.error("Unexpected exception occur at defer expire time, cause: " + t.getMessage(), t);
@@ -165,10 +173,14 @@ public class RedisRegistry extends FailbackRegistry {
             try {
                 Jedis jedis = jedisPool.getResource();
                 try {
+                    //获取所有的注册了的URL
                     for (URL url : new HashSet<URL>(getRegistered())) {
                         if (url.getParameter(Constants.DYNAMIC_KEY, true)) {
+                            //url--string
                             String key = toCategoryPath(url);
+                            //hset key map：存储的是一个map对
                             if (jedis.hset(key, url.toFullString(), String.valueOf(System.currentTimeMillis() + expirePeriod)) == 1) {
+                                //redis的消息发布&订阅
                                 jedis.publish(key, Constants.REGISTER);
                             }
                         }
@@ -189,10 +201,12 @@ public class RedisRegistry extends FailbackRegistry {
     }
 
     // The monitoring center is responsible for deleting outdated dirty data
+    //主动清理
     private void clean(Jedis jedis) {
         Set<String> keys = jedis.keys(root + Constants.ANY_VALUE);
         if (keys != null && !keys.isEmpty()) {
             for (String key : keys) {
+                //获取key的所有值
                 Map<String, String> values = jedis.hgetAll(key);
                 if (values != null && values.size() > 0) {
                     boolean delete = false;
@@ -202,6 +216,7 @@ public class RedisRegistry extends FailbackRegistry {
                         if (url.getParameter(Constants.DYNAMIC_KEY, true)) {
                             long expire = Long.parseLong(entry.getValue());
                             if (expire < now) {
+                                //删除key map
                                 jedis.hdel(key, entry.getKey());
                                 delete = true;
                                 if (logger.isWarnEnabled()) {
@@ -211,6 +226,7 @@ public class RedisRegistry extends FailbackRegistry {
                         }
                     }
                     if (delete) {
+                        //推送删除的
                         jedis.publish(key, Constants.UNREGISTER);
                     }
                 }
@@ -224,6 +240,7 @@ public class RedisRegistry extends FailbackRegistry {
             try {
                 Jedis jedis = jedisPool.getResource();
                 try {
+                    //jedis的链接
                     if (jedis.isConnected()) {
                         return true; // At least one single machine is available.
                     }
@@ -254,6 +271,7 @@ public class RedisRegistry extends FailbackRegistry {
         for (Map.Entry<String, JedisPool> entry : jedisPools.entrySet()) {
             JedisPool jedisPool = entry.getValue();
             try {
+                //关闭JedisPool
                 jedisPool.destroy();
             } catch (Throwable t) {
                 logger.warn("Failed to destroy the redis registry client. registry: " + entry.getKey() + ", cause: " + t.getMessage(), t);
@@ -274,7 +292,9 @@ public class RedisRegistry extends FailbackRegistry {
             try {
                 Jedis jedis = jedisPool.getResource();
                 try {
+                    //redis注册就是，添加到redis中
                     jedis.hset(key, value, expire);
+                    //发布消息
                     jedis.publish(key, Constants.REGISTER);
                     success = true;
                     if (!replicate) {
@@ -307,7 +327,9 @@ public class RedisRegistry extends FailbackRegistry {
             try {
                 Jedis jedis = jedisPool.getResource();
                 try {
+                    //删除
                     jedis.hdel(key, value);
+                    //发布消息
                     jedis.publish(key, Constants.UNREGISTER);
                     success = true;
                     if (!replicate) {
@@ -329,16 +351,25 @@ public class RedisRegistry extends FailbackRegistry {
         }
     }
 
+    /**
+     * 1.notifier.start();//开启线程
+     * 2.jedis.psubscribe(new NotifySub(jedisPool), service); // blocking
+     * 3.NotifySub.message
+     * 4.jedis.publish(key, Constants.UNREGISTER);
+     *
+     */
+
     @Override
     public void doSubscribe(final URL url, final NotifyListener listener) {
         String service = toServicePath(url);
         Notifier notifier = notifiers.get(service);
         if (notifier == null) {
+            //订阅者
             Notifier newNotifier = new Notifier(service);
             notifiers.putIfAbsent(service, newNotifier);
             notifier = notifiers.get(service);
             if (notifier == newNotifier) {
-                notifier.start();
+                notifier.start();//开启线程
             }
         }
         boolean success = false;
@@ -397,6 +428,7 @@ public class RedisRegistry extends FailbackRegistry {
         }
     }
 
+    //todo 核心
     private void doNotify(Jedis jedis, Collection<String> keys, URL url, Collection<NotifyListener> listeners) {
         if (keys == null || keys.isEmpty()
                 || listeners == null || listeners.isEmpty()) {
@@ -405,8 +437,9 @@ public class RedisRegistry extends FailbackRegistry {
         long now = System.currentTimeMillis();
         List<URL> result = new ArrayList<URL>();
         List<String> categories = Arrays.asList(url.getParameter(Constants.CATEGORY_KEY, new String[0]));
+        //消费者(订阅者)
         String consumerService = url.getServiceInterface();
-        for (String key : keys) {
+        for (String key : keys) { //url
             if (!Constants.ANY_VALUE.equals(consumerService)) {
                 String prvoiderService = toServiceName(key);
                 if (!prvoiderService.equals(consumerService)) {
@@ -477,6 +510,7 @@ public class RedisRegistry extends FailbackRegistry {
         return toServicePath(url) + Constants.PATH_SEPARATOR + url.getParameter(Constants.CATEGORY_KEY, Constants.DEFAULT_CATEGORY);
     }
 
+    //redis的发布者和订阅者
     private class NotifySub extends JedisPubSub {
 
         private final JedisPool jedisPool;
@@ -495,6 +529,7 @@ public class RedisRegistry extends FailbackRegistry {
                 try {
                     Jedis jedis = jedisPool.getResource();
                     try {
+                        //redis pub-->sub-->listener
                         doNotify(jedis, key);
                     } finally {
                         jedis.close();
@@ -582,14 +617,17 @@ public class RedisRegistry extends FailbackRegistry {
                                         if (service.endsWith(Constants.ANY_VALUE)) {
                                             if (!first) {
                                                 first = false;
+                                                //模糊搜索所有key
                                                 Set<String> keys = jedis.keys(service);
                                                 if (keys != null && !keys.isEmpty()) {
                                                     for (String s : keys) {
+                                                        //去通知
                                                         doNotify(jedis, s);
                                                     }
                                                 }
                                                 resetSkip();
                                             }
+                                            //todo jedis.psubscribe
                                             jedis.psubscribe(new NotifySub(jedisPool), service); // blocking
                                         } else {
                                             if (!first) {

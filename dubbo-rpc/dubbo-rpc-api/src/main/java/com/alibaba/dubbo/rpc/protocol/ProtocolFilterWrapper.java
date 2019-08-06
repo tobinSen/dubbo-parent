@@ -69,6 +69,7 @@ public class ProtocolFilterWrapper implements Protocol {
 
                     @Override
                     public Result invoke(Invocation invocation) throws RpcException {
+                        //实现了过滤器链
                         return filter.invoke(next, invocation);
                     }
 

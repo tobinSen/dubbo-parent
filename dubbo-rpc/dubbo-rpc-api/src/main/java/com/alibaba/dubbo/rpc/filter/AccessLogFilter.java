@@ -111,6 +111,7 @@ public class AccessLogFilter implements Filter {
                 String serviceName = invoker.getInterface().getName();
                 String version = invoker.getUrl().getParameter(Constants.VERSION_KEY);
                 String group = invoker.getUrl().getParameter(Constants.GROUP_KEY);
+
                 StringBuilder sn = new StringBuilder();
                 sn.append("[").append(new SimpleDateFormat(MESSAGE_DATE_FORMAT).format(new Date())).append("] ").append(context.getRemoteHost()).append(":").append(context.getRemotePort())
                         .append(" -> ").append(context.getLocalHost()).append(":").append(context.getLocalPort())

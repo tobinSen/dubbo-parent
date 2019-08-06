@@ -104,6 +104,7 @@ public class ForkingClusterInvoker<T> extends AbstractClusterInvoker<T> {
                 throw new RpcException("Failed to forking invoke provider " + selected + ", but no luck to perform the invocation. Last error is: " + e.getMessage(), e);
             }
         } finally {
+            //一次请求，避免oom
             // clear attachments which is binding to current thread.
             RpcContext.getContext().clearAttachments();
         }

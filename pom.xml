@@ -125,6 +125,8 @@
         <rat.skip>true</rat.skip>
     </properties>
 
+    <!--parent pom , dubbo-dependencies-bom, bom-->
+
     <modules>
         <module>dubbo-common</module>
         <module>dubbo-container</module>
@@ -259,7 +261,7 @@
                                 <configuration>
                                     <configLocation>codestyle/checkstyle.xml</configLocation>
                                     <suppressionsLocation>codestyle/checkstyle-suppressions.xml</suppressionsLocation>
-                                    <linkXRef>false</linkXRef>
+                                    <!--<linkXRef>false</linkXRef>-->
                                     <encoding>UTF-8</encoding>
                                     <consoleOutput>true</consoleOutput>
                                     <failOnViolation>true</failOnViolation>

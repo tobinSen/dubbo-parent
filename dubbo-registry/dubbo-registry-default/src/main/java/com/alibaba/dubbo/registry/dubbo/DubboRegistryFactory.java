@@ -45,6 +45,7 @@ public class DubboRegistryFactory extends AbstractRegistryFactory {
     private ProxyFactory proxyFactory;
     private Cluster cluster;
 
+    //增加参数
     private static URL getRegistryURL(URL url) {
         return url.setPath(RegistryService.class.getName())
                 .removeParameter(Constants.EXPORT_KEY).removeParameter(Constants.REFER_KEY)
@@ -77,19 +78,31 @@ public class DubboRegistryFactory extends AbstractRegistryFactory {
 
     @Override
     public Registry createRegistry(URL url) {
+        //类似于初始化注册中心
         url = getRegistryURL(url);
         List<URL> urls = new ArrayList<URL>();
+        //返回移除的URL（移除备用的值）
         urls.add(url.removeParameter(Constants.BACKUP_KEY));
+        //backup的参数值zookeeper://10.101.200.8:2181?backup=10.101.200.9:2181,10.101.200.15:2181
+        //backup就是集群
         String backup = url.getParameter(Constants.BACKUP_KEY);
         if (backup != null && backup.length() > 0) {
             String[] addresses = Constants.COMMA_SPLIT_PATTERN.split(backup);
+
             for (String address : addresses) {
+                //这里是新的URL
                 urls.add(url.setAddress(address));
             }
         }
+        //url-->invoker
+        //创建RegistryDirectory，里面有多个Registry的Invoker
         RegistryDirectory<RegistryService> directory = new RegistryDirectory<RegistryService>(RegistryService.class, url.addParameter(Constants.INTERFACE_KEY, RegistryService.class.getName()).addParameterAndEncoded(Constants.REFER_KEY, url.toParameterString()));
+        //将directory中的多个Invoker伪装成一个Invoker
         Invoker<RegistryService> registryInvoker = cluster.join(directory);
+        //jdk的proxy或javassist
         RegistryService registryService = proxyFactory.getProxy(registryInvoker);
+
+        // 创建注册中心对象
         DubboRegistry registry = new DubboRegistry(registryInvoker, registryService);
         directory.setRegistry(registry);
         directory.setProtocol(protocol);

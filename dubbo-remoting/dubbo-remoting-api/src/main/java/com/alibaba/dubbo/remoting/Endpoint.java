@@ -24,29 +24,29 @@ import java.net.InetSocketAddress;
  * Endpoint. (API/SPI, Prototype, ThreadSafe)
  *
  *
- * @see com.alibaba.dubbo.remoting.Channel
- * @see com.alibaba.dubbo.remoting.Client
- * @see com.alibaba.dubbo.remoting.Server
+ * @see com.alibaba.dubbo.remoting.Channel  通道
+ * @see com.alibaba.dubbo.remoting.Client   客户端
+ * @see com.alibaba.dubbo.remoting.Server   服务器
  */
 public interface Endpoint {
 
     /**
      * get url.
-     *
+     * 获得该端的url
      * @return url
      */
     URL getUrl();
 
     /**
      * get channel handler.
-     *
+     *获得该端的通道处理器
      * @return channel handler
      */
     ChannelHandler getChannelHandler();
 
     /**
      * get local address.
-     *
+     *获得该端的本地地址
      * @return local address.
      */
     InetSocketAddress getLocalAddress();
@@ -61,7 +61,7 @@ public interface Endpoint {
 
     /**
      * send message.
-     *
+     *发送消息，sent是是否已经发送的标记
      * @param message
      * @param sent    already sent to socket?
      */
@@ -74,9 +74,13 @@ public interface Endpoint {
 
     /**
      * Graceful close the channel.
+     * 优雅的关闭，也就是加入了等待时间
      */
     void close(int timeout);
 
+    /**
+     * 开始关闭
+     */
     void startClose();
 
     /**

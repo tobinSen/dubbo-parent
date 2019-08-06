@@ -25,9 +25,7 @@ import com.alibaba.dubbo.rpc.support.RpcUtils;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -117,7 +115,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
                     & 0xFFFFFFFFL;
         }
 
-        private byte[] md5(String value) {
+        public byte[] md5(String value) {
             MessageDigest md5;
             try {
                 md5 = MessageDigest.getInstance("MD5");
@@ -134,6 +132,13 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
             md5.update(bytes);
             return md5.digest();
         }
+
+    }
+
+    public static void main(String[] args) {
+        ConsistentHashLoadBalance.ConsistentHashSelector balance = new ConsistentHashLoadBalance.ConsistentHashSelector<Object>(null,null,0);
+        String s = Arrays.toString(balance.md5("123"));
+        System.out.println(s);
 
     }
 

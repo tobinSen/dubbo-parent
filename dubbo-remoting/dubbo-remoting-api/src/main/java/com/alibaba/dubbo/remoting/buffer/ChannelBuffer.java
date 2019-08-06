@@ -195,7 +195,7 @@ import java.nio.ByteBuffer;
  * involved.
  * <p/>
  * <h4>I/O Streams</h4>
- * <p/>
+ * <p/> NIO
  * Please refer to {@link ChannelBufferInputStream} and {@link
  * ChannelBufferOutputStream}.
  *

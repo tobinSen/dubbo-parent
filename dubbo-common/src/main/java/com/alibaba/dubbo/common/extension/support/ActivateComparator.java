@@ -50,6 +50,7 @@ public class ActivateComparator implements Comparator<Object> {
                 && o1.getClass().getInterfaces().length > 0
                 && o1.getClass().getInterfaces()[0].isAnnotationPresent(SPI.class)) {
             ExtensionLoader<?> extensionLoader = ExtensionLoader.getExtensionLoader(o1.getClass().getInterfaces()[0]);
+            //使用Activate注解的 `after` 和 `before` 属性，排序
             if (a1.before().length > 0 || a1.after().length > 0) {
                 String n2 = extensionLoader.getExtensionName(o2.getClass());
                 for (String before : a1.before()) {

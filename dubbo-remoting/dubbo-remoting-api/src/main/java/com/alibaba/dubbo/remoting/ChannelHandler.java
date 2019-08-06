@@ -30,7 +30,7 @@ public interface ChannelHandler {
 
     /**
      * on channel connected.
-     *
+     * 连接该通道
      * @param channel channel.
      */
     void connected(Channel channel) throws RemotingException;
@@ -44,7 +44,7 @@ public interface ChannelHandler {
 
     /**
      * on message sent.
-     *
+     *发送给这个通道消息
      * @param channel channel.
      * @param message message.
      */
@@ -52,7 +52,7 @@ public interface ChannelHandler {
 
     /**
      * on message received.
-     *
+     *从这个通道内接收消息
      * @param channel channel.
      * @param message message.
      */
@@ -60,7 +60,7 @@ public interface ChannelHandler {
 
     /**
      * on exception caught.
-     *
+     *从这个通道内捕获异常
      * @param channel   channel.
      * @param exception exception.
      */

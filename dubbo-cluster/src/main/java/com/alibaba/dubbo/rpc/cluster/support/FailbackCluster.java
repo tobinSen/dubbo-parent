@@ -24,6 +24,8 @@ import com.alibaba.dubbo.rpc.cluster.Directory;
 /**
  * {@link FailbackClusterInvoker}
  *
+ * 失败后，进行回调，集群的集中实现方式
+ *
  */
 public class FailbackCluster implements Cluster {
 

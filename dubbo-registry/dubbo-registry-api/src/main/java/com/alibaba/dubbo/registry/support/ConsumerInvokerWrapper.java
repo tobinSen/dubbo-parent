@@ -27,6 +27,10 @@ import com.alibaba.dubbo.rpc.RpcException;
  * @date 2017/11/23
  */
 public class ConsumerInvokerWrapper<T> implements Invoker {
+    /**
+     * getInterface
+     * Result
+     */
     private Invoker<T> invoker;
     private URL originUrl;
     private URL registryUrl;

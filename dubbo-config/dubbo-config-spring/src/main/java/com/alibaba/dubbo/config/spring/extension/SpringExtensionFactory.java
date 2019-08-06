@@ -50,11 +50,11 @@ public class SpringExtensionFactory implements ExtensionFactory {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T getExtension(Class<T> type, String name) {
+    public <T> T getExtension(Class<T> type, String name) { //name = beanName
         for (ApplicationContext context : contexts) {
             if (context.containsBean(name)) {
                 Object bean = context.getBean(name);
-                if (type.isInstance(bean)) {
+                if (type.isInstance(bean)) { //判断bean是type的一个实例
                     return (T) bean;
                 }
             }

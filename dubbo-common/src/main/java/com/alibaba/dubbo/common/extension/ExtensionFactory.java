@@ -19,7 +19,7 @@ package com.alibaba.dubbo.common.extension;
 /**
  * ExtensionFactory
  */
-@SPI
+@SPI //这里没有指定value，那么当接口存在多个实现的时候，通过适配器进行存储多个实现类，进行调用
 public interface ExtensionFactory {
 
     /**

@@ -21,7 +21,7 @@ import com.alibaba.dubbo.rpc.cluster.configurator.AbstractConfigurator;
 
 /**
  * AbsentConfigurator
- *
+ *添加配置
  */
 public class AbsentConfigurator extends AbstractConfigurator {
 

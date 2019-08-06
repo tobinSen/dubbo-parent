@@ -25,7 +25,7 @@ import com.alibaba.dubbo.common.extension.SPI;
 public interface ExporterListener {
 
     /**
-     * The exporter exported.
+     * The exporter exported.暴露服务
      *
      * @param exporter
      * @throws RpcException

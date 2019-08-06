@@ -24,10 +24,11 @@ import com.alibaba.dubbo.remoting.Endpoint;
 import com.alibaba.dubbo.remoting.RemotingException;
 
 /**
- * AbstractPeer
+ * AbstractPeer 这是顶级
  */
 public abstract class AbstractPeer implements Endpoint, ChannelHandler {
 
+    //通道处理（装饰者模式）
     private final ChannelHandler handler;
 
     private volatile URL url;

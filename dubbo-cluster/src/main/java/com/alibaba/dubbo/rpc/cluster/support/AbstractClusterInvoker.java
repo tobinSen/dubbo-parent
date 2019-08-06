@@ -40,6 +40,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * AbstractClusterInvoker
+ *  这里的Invoker本质是cluster中合并的虚拟集群的invoker
+ *          |
+ *   AbstractClusterInvoker
+ * 该类实现了Invoker接口，是集群Invoker的抽象类。
+ *
+ *                                      Invoker
+ *  Cluster(directory-》invoker)         |
+ *                              AbstractClusterInvoker:选择一个Invoker
  *
  */
 public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
@@ -108,6 +116,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @return
      * @throws RpcException
      */
+    //选择一个invoker
     protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
         if (invokers == null || invokers.isEmpty())
             return null;
@@ -178,6 +187,7 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
      * @return
      * @throws RpcException
      */
+    //重新选择
     private Invoker<T> reselect(LoadBalance loadbalance, Invocation invocation,
                                 List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availablecheck)
             throws RpcException {
@@ -270,9 +280,12 @@ public abstract class AbstractClusterInvoker<T> implements Invoker<T> {
         }
     }
 
+    //todo 进行扩展
     protected abstract Result doInvoke(Invocation invocation, List<Invoker<T>> invokers,
                                        LoadBalance loadbalance) throws RpcException;
 
+
+    // invoker的集合
     protected List<Invoker<T>> list(Invocation invocation) throws RpcException {
         List<Invoker<T>> invokers = directory.list(invocation);
         return invokers;

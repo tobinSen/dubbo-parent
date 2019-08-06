@@ -68,6 +68,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         try {
             for (Registry registry : getRegistries()) {
                 try {
+                    //是销毁所有的Registry对象，并且清除内存缓存
                     registry.destroy();
                 } catch (Throwable e) {
                     LOGGER.error(e.getMessage(), e);
@@ -93,6 +94,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             if (registry != null) {
                 return registry;
             }
+            //通过URL来动态创建注册中心的实现
             registry = createRegistry(url);
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);
@@ -105,6 +107,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
         }
     }
 
+    //todo 扩展
     protected abstract Registry createRegistry(URL url);
 
 }

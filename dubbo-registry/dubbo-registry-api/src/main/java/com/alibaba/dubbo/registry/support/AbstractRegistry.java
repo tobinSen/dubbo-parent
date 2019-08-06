@@ -51,28 +51,35 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * AbstractRegistry. (SPI, Prototype, ThreadSafe)
- *
  */
 public abstract class AbstractRegistry implements Registry {
 
-    // URL address separator, used in file cache, service provider URL separation
+    // URL的地址分隔符，在缓存文件中使用，服务提供者的URL分隔
     private static final char URL_SEPARATOR = ' ';
-    // URL address separated regular expression for parsing the service provider URL list in the file cache
+    // URL地址分隔正则表达式，用于解析文件缓存中服务提供者URL列表
     private static final String URL_SPLIT = "\\s+";
-    // Log output
+    // 日志输出
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    // Local disk cache, where the special key value.registies records the list of registry centers, and the others are the list of notified service providers
+    // 本地磁盘缓存，有一个特殊的key值为registies，记录的是注册中心列表，其他记录的都是服务提供者列表
     private final Properties properties = new Properties();
-    // File cache timing writing
+    // 缓存写入执行器(线程工厂)
     private final ExecutorService registryCacheExecutor = Executors.newFixedThreadPool(1, new NamedThreadFactory("DubboSaveRegistryCache", true));
-    // Is it synchronized to save the file
+    // 是否同步保存文件标志
     private final boolean syncSaveFile;
+    //数据版本号
     private final AtomicLong lastCacheChanged = new AtomicLong();
+    // 已注册 URL 集合
+    // 注册的 URL 不仅仅可以是服务提供者的，也可以是服务消费者的
     private final Set<URL> registered = new ConcurrentHashSet<URL>();
+    // 订阅URL的监听器集合（URL-->监听器多个consumer-->多个provider）
     private final ConcurrentMap<URL, Set<NotifyListener>> subscribed = new ConcurrentHashMap<URL, Set<NotifyListener>>();
+    // 某个消费者被通知的某一类型的 URL 集合
+    // 第一个key是消费者的URL，对应的就是哪个消费者。
+    // value是一个map集合，该map集合的key是分类的意思，例如providers、routes等，value就是被通知的URL集合
     private final ConcurrentMap<URL, Map<String, List<URL>>> notified = new ConcurrentHashMap<URL, Map<String, List<URL>>>();
+    // 注册中心 URL
     private URL registryUrl;
-    // Local disk cache file
+    // 本地磁盘缓存文件，缓存注册中心的数据
     private File file;
 
     public AbstractRegistry(URL url) {
@@ -90,7 +97,9 @@ public abstract class AbstractRegistry implements Registry {
             }
         }
         this.file = file;
+        // 把文件里面的数据写入properties
         loadProperties();
+        // 通知监听器，URL 变化结果
         notify(url.getBackupUrls());
     }
 
@@ -139,6 +148,12 @@ public abstract class AbstractRegistry implements Registry {
         return lastCacheChanged;
     }
 
+    /**
+     * //随机访问流
+     * RandomAccessFile raf = new RandomAccessFile(lockfile, "rw");
+     * FileChannel channel = raf.getChannel();
+     * FileLock lock = channel.tryLock();文件存放的路径加锁
+     */
     public void doSaveProperties(long version) {
         if (version < lastCacheChanged.get()) {
             return;
@@ -152,10 +167,13 @@ public abstract class AbstractRegistry implements Registry {
             if (!lockfile.exists()) {
                 lockfile.createNewFile();
             }
+            //随机访问流（文件存放的路径加锁）
             RandomAccessFile raf = new RandomAccessFile(lockfile, "rw");
             try {
+                //nio文件通道
                 FileChannel channel = raf.getChannel();
                 try {
+                    //通道上锁（文件锁）
                     FileLock lock = channel.tryLock();
                     if (lock == null) {
                         throw new IOException("Can not lock the registry cache file " + file.getAbsolutePath() + ", ignore and retry later, maybe multi java process use the file, please config: dubbo.registry.file=xxx.properties");
@@ -165,19 +183,24 @@ public abstract class AbstractRegistry implements Registry {
                         if (!file.exists()) {
                             file.createNewFile();
                         }
+                        //存储目录
                         FileOutputStream outputFile = new FileOutputStream(file);
                         try {
+                            //将properties转为文件流
                             properties.store(outputFile, "Dubbo Registry Cache");
                         } finally {
                             outputFile.close();
                         }
                     } finally {
+                        //释放文件锁
                         lock.release();
                     }
                 } finally {
+                    //关闭通道
                     channel.close();
                 }
             } finally {
+                //关闭随机访问流
                 raf.close();
             }
         } catch (Throwable e) {
@@ -231,6 +254,7 @@ public abstract class AbstractRegistry implements Registry {
         return null;
     }
 
+    //获取注册中心所有的URL
     @Override
     public List<URL> lookup(URL url) {
         List<URL> result = new ArrayList<URL>();
@@ -264,6 +288,7 @@ public abstract class AbstractRegistry implements Registry {
         return result;
     }
 
+    //api注册只是注册到内存中
     @Override
     public void register(URL url) {
         if (url == null) {
@@ -299,6 +324,7 @@ public abstract class AbstractRegistry implements Registry {
         }
         Set<NotifyListener> listeners = subscribed.get(url);
         if (listeners == null) {
+            //url -->listener
             subscribed.putIfAbsent(url, new ConcurrentHashSet<NotifyListener>());
             listeners = subscribed.get(url);
         }

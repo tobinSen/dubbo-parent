@@ -19,24 +19,27 @@ package com.alibaba.dubbo.common;
 /**
  * Node. (API/SPI, Prototype, ThreadSafe)
  */
+
+//URL代表一个节点
 public interface Node {
 
     /**
      * get url.
-     *
+     *获得节点地址
      * @return url.
      */
     URL getUrl();
 
     /**
      * is available.
-     *
+     *判断节点是否可用
      * @return available.
      */
     boolean isAvailable();
 
     /**
      * destroy.
+     * 摧毁一个节点
      */
     void destroy();
 

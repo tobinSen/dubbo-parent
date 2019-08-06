@@ -26,7 +26,7 @@ public interface InvokerListener {
 
     /**
      * The invoker referred
-     *
+     *在服务引用的时候进行监听
      * @param invoker
      * @throws RpcException
      * @see com.alibaba.dubbo.rpc.Protocol#refer(Class, com.alibaba.dubbo.common.URL)

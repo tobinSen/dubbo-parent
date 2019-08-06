@@ -44,7 +44,7 @@ public class JdkProxyFactory extends AbstractProxyFactory {
                                       Class<?>[] parameterTypes,
                                       Object[] arguments) throws Throwable {
                 Method method = proxy.getClass().getMethod(methodName, parameterTypes);
-                return method.invoke(proxy, arguments);
+                return method.invoke(proxy, arguments); //代理对象执行
             }
         };
     }

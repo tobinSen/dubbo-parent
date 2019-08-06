@@ -25,7 +25,7 @@ import java.util.Map;
  * @see com.alibaba.dubbo.rpc.Invoker#invoke(Invocation)
  * @see com.alibaba.dubbo.rpc.RpcInvocation
  */
-public interface Invocation {
+public interface Invocation { //远程调用的过程参数
 
     /**
      * get method name.

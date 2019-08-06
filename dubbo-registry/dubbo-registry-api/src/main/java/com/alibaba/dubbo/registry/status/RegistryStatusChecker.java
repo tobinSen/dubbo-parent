@@ -33,6 +33,7 @@ public class RegistryStatusChecker implements StatusChecker {
 
     @Override
     public Status check() {
+        //获取所有的注册中心
         Collection<Registry> registries = AbstractRegistryFactory.getRegistries();
         if (registries.isEmpty()) {
             return new Status(Status.Level.UNKNOWN);
@@ -43,7 +44,9 @@ public class RegistryStatusChecker implements StatusChecker {
             if (buf.length() > 0) {
                 buf.append(",");
             }
+            //zookeeper://127.0.0.1:2183
             buf.append(registry.getUrl().getAddress());
+            //注册中心是否是激活，看连接状态是否是成功的
             if (!registry.isAvailable()) {
                 level = Status.Level.ERROR;
                 buf.append("(disconnected)");

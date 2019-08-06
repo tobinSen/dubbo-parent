@@ -35,6 +35,7 @@ public class ApplicationModel {
 
     /**
      * full qualified class name -> provided service
+     * 生产者
      */
     private static final ConcurrentMap<String, ProviderModel> providedServices = new ConcurrentHashMap<String, ProviderModel>();
     /**
@@ -61,6 +62,7 @@ public class ApplicationModel {
     }
 
     public static boolean initConsumerModel(String serviceName, ConsumerModel consumerModel) {
+        //利用返回值的特性 add
         if (consumedServices.putIfAbsent(serviceName, consumerModel) != null) {
             logger.warn("Already register the same consumer:" + serviceName);
             return false;

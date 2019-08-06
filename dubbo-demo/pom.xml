@@ -39,6 +39,7 @@
             <dependency>
                 <groupId>com.alibaba</groupId>
                 <artifactId>dubbo-bom</artifactId>
+                <!--由parent来定义version,同时依赖的2各个pom[bom dependencies bom]-->
                 <version>${project.parent.version}</version>
                 <type>pom</type>
                 <scope>import</scope>

@@ -26,14 +26,17 @@ import java.io.IOException;
 @SPI
 public interface Codec2 {
 
+    //编码
     @Adaptive({Constants.CODEC_KEY})
     void encode(Channel channel, ChannelBuffer buffer, Object message) throws IOException;
 
+    //解码
     @Adaptive({Constants.CODEC_KEY})
     Object decode(Channel channel, ChannelBuffer buffer) throws IOException;
 
 
     enum DecodeResult {
+        //需要更多输入和忽略一些输入
         NEED_MORE_INPUT, SKIP_SOME_INPUT
     }
 

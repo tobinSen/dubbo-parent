@@ -22,8 +22,9 @@ import com.alibaba.dubbo.rpc.cluster.Cluster;
 import com.alibaba.dubbo.rpc.cluster.Directory;
 
 /**
- * BroadcastCluster
  *
+ * BroadcastCluster
+ * 广播的集群
  */
 public class BroadcastCluster implements Cluster {
 

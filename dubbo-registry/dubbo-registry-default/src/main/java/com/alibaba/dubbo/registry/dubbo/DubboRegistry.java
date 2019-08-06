@@ -56,6 +56,9 @@ public class DubboRegistry extends FailbackRegistry {
     // The lock for client acquisition process, lock the creation process of the client instance to prevent repeated clients
     private final ReentrantLock clientLock = new ReentrantLock();
 
+    //Invoker也是一个节点
+    //Node-->URL
+    //Node-->Invoker
     private final Invoker<RegistryService> registryInvoker;
 
     private final RegistryService registryService;
@@ -66,39 +69,49 @@ public class DubboRegistry extends FailbackRegistry {
     private final int reconnectPeriod;
 
     public DubboRegistry(Invoker<RegistryService> registryInvoker, RegistryService registryService) {
+        //registryUrl：注册中心URL（以dubbo为注册中心，需要将自己的URL注册到【抽象层】中，扩展性）
         super(registryInvoker.getUrl());
         this.registryInvoker = registryInvoker;
-        this.registryService = registryService;
+        this.registryService = registryService; //这里是一个代理对象
         // Start reconnection timer
         this.reconnectPeriod = registryInvoker.getUrl().getParameter(Constants.REGISTRY_RECONNECT_PERIOD_KEY, RECONNECT_PERIOD_DEFAULT);
+        //相对固定的时间内进行延时重试
         reconnectFuture = reconnectTimer.scheduleWithFixedDelay(new Runnable() {
             @Override
+
             public void run() {
                 // Check and connect to the registry
                 try {
+                    //dubbo为注册中心-->注册到AbstractRegistry抽象化
                     connect();
                 } catch (Throwable t) { // Defensive fault tolerance
                     logger.error("Unexpected error occur at reconnect, cause: " + t.getMessage(), t);
                 }
             }
+            //3秒重试链接
         }, reconnectPeriod, reconnectPeriod, TimeUnit.MILLISECONDS);
     }
 
     protected final void connect() {
         try {
             // Check whether or not it is connected
+            // 判断dubbo为注册中心就是一个Invoker-->Node
             if (isAvailable()) {
                 return;
             }
             if (logger.isInfoEnabled()) {
                 logger.info("Reconnect to registry " + getUrl());
             }
+            //加锁
             clientLock.lock();
             try {
                 // Double check whether or not it is connected
+                //
                 if (isAvailable()) {
                     return;
                 }
+                //加锁的原因是避免重复链接
+                //todo 这里的重试：将该添加,当注册中心更换的时候，向上的URL不需要重新注册，只需要改变向下的扩展持久化注册
                 recover();
             } finally {
                 clientLock.unlock();
@@ -133,9 +146,11 @@ public class DubboRegistry extends FailbackRegistry {
             logger.warn("Failed to cancel reconnect timer", t);
         }
         registryInvoker.destroy();
+        //优雅关机
         ExecutorUtil.gracefulShutdown(reconnectTimer, reconnectPeriod);
     }
 
+    //dubbo的注册中心实现的注册是内存注册形式
     @Override
     protected void doRegister(URL url) {
         registryService.register(url);

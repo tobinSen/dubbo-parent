@@ -27,7 +27,9 @@ import java.util.Set;
 
 /**
  * AbstractOverrideConfigurator
+ * 向注册中心写入动态配置覆盖规则
  *
+ * 一种是没有时添加配置，这种暂时没有用到，另一种是覆盖配置。
  */
 public abstract class AbstractConfigurator implements Configurator {
 
@@ -127,6 +129,7 @@ public abstract class AbstractConfigurator implements Configurator {
 
     }
 
+    //todo 扩展
     protected abstract URL doConfigure(URL currentUrl, URL configUrl);
 
 }

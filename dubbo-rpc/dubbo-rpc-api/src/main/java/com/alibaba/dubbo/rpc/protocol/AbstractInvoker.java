@@ -174,6 +174,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
         }
     }
 
+    //todo 进行扩展
     protected abstract Result doInvoke(Invocation invocation) throws Throwable;
 
 }

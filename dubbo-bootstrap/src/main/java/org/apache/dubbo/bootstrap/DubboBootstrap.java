@@ -25,6 +25,7 @@ import java.util.List;
 /**
  * A bootstrap class to easily start and stop Dubbo via programmatic API.
  * The bootstrap class will be responsible to cleanup the resources during stop.
+ * 清理dubbo的缓存文件的
  */
 public class DubboBootstrap {
 
@@ -76,6 +77,7 @@ public class DubboBootstrap {
             removeShutdownHook();
         }
         for (ServiceConfig serviceConfig: serviceConfigList) {
+            //生产者服务暴露
             serviceConfig.export();
         }
     }

@@ -37,6 +37,7 @@ public class ClassLoaderFilter implements Filter {
         try {
             return invoker.invoke(invocation);
         } finally {
+            //切换类加载器
             Thread.currentThread().setContextClassLoader(ocl);
         }
     }

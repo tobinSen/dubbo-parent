@@ -30,6 +30,7 @@ import org.springframework.context.ConfigurableApplicationContext;
  * If user specifies <metadata-complete="true" /> in web.xml, this will no take effect,
  * unless user configures {@link DubboApplicationContextInitializer} explicitly in web.xml.
  */
+//这里是spring启动的时候的一个监听器，添加一个dubbo的监听器
 public class DubboApplicationContextInitializer implements ApplicationContextInitializer {
 
     @Override

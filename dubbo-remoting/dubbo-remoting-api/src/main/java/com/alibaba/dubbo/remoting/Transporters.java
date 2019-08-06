@@ -28,7 +28,7 @@ import com.alibaba.dubbo.remoting.transport.ChannelHandlerDispatcher;
 public class Transporters {
 
     static {
-        // check duplicate jar package
+        // check duplicate jar package 检查重复的 jar 包
         Version.checkDuplicate(Transporters.class);
         Version.checkDuplicate(RemotingException.class);
     }

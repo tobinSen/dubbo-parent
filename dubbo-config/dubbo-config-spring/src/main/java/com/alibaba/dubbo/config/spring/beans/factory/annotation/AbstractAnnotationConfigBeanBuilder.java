@@ -101,12 +101,13 @@ abstract class AbstractAnnotationConfigBeanBuilder<A extends Annotation, B exten
 
         preConfigureBean(annotation, bean);
 
+        //1.配置registryConfig
         configureRegistryConfigs(bean);
-
+        //2.配置MonitorConfig
         configureMonitorConfig(bean);
-
+        //3.配置ApplicationConfig
         configureApplicationConfig(bean);
-
+        //4.配置ModuleConfig
         configureModuleConfig(bean);
 
         postConfigureBean(annotation, bean);

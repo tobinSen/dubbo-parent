@@ -137,6 +137,7 @@ public abstract class AbstractProxyProtocol extends AbstractProtocol {
         return RpcException.UNKNOWN_EXCEPTION;
     }
 
+    //todo 扩展
     protected abstract <T> Runnable doExport(T impl, Class<T> type, URL url) throws RpcException;
 
     protected abstract <T> T doRefer(Class<T> type, URL url) throws RpcException;

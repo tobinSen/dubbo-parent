@@ -40,6 +40,9 @@ public interface RegistryService {
      *
      * @param url  Registration information , is not allowed to be empty, e.g: dubbo://10.20.153.10/com.alibaba.foo.BarService?version=1.0.0&application=kylin
      */
+
+    //注册，如果看懂我上面说的url的作用，那么就很清楚该方法的作用了，这里强调一点，就是注释中讲到的允许URI相同但参数不同的URL并存，
+    //不能覆盖，也就是说url值必须唯一的，不能有一模一样。
     void register(URL url);
 
     /**
@@ -51,6 +54,7 @@ public interface RegistryService {
      *
      * @param url Registration information , is not allowed to be empty, e.g: dubbo://10.20.153.10/com.alibaba.foo.BarService?version=1.0.0&application=kylin
      */
+    //取消注册，该方法也很简单，就是取消注册，也就是商品生产者不在销售该商品， 需要把东西从自动售卖机上取下来，栏目也要取出，这里强调按全URL匹配取消注册
     void unregister(URL url);
 
     /**
@@ -68,6 +72,8 @@ public interface RegistryService {
      * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/com.alibaba.foo.BarService?version=1.0.0&application=kylin
      * @param listener A listener of the change event, not allowed to be empty
      */
+    //订阅，这里不是根据全URL匹配订阅的，而是根据条件去订阅，也就是说可以订阅多个服务。
+    //listener是用来监听处理注册数据变更的事件(consumer来触发)
     void subscribe(URL url, NotifyListener listener);
 
     /**
@@ -80,6 +86,7 @@ public interface RegistryService {
      * @param url      Subscription condition, not allowed to be empty, e.g. consumer://10.20.153.10/com.alibaba.foo.BarService?version=1.0.0&application=kylin
      * @param listener A listener of the change event, not allowed to be empty
      */
+    //取消订阅，这是按照全URL匹配去取消订阅的。
     void unsubscribe(URL url, NotifyListener listener);
 
     /**
@@ -89,6 +96,7 @@ public interface RegistryService {
      * @return The registered information list, which may be empty, the meaning is the same as the parameters of {@link com.alibaba.dubbo.registry.NotifyListener#notify(List<URL>)}.
      * @see com.alibaba.dubbo.registry.NotifyListener#notify(List)
      */
+    //查询注册列表，通过url进行条件查询所匹配的所有URL集合。
     List<URL> lookup(URL url);
 
 }
