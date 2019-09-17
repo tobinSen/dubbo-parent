@@ -341,6 +341,12 @@
     4.AbstractReferenceConfig：主要是引用实例的配置
     5.AbstractServiceConfig
     
+    //dubbo自身的
+    ServiceConfig
+    ReferenceConfig -->ReferenceConfigCache
+    RegistryConfig
+    
+    //这两个是spring的
     ServiceBean -->@Service
     ReferenceBean -->@Reference
     

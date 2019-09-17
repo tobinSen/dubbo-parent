@@ -134,4 +134,8 @@ public class Stack<E> {
         mSize = 0;
         mElements.clear();
     }
+
+    public static void main(String[] args) {
+
+    }
 }
